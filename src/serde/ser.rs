@@ -230,7 +230,7 @@ impl<W: Write> Serializer for &mut Encoder<W> {
     }
 
     fn serialize_unit_struct(self, name: &'static str) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        Ok(self.writer.write_all(&[0xF6])?)
     }
 
     fn serialize_unit_variant(
