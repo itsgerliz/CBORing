@@ -1,18 +1,38 @@
 use crate::error::EncodeError;
-use serde::ser::{Serialize, Serializer};
+use serde::ser::{Serialize, SerializeSeq, Serializer};
 use std::io::{BufWriter, Write};
 
 pub struct Encoder<W: Write> {
     writer: BufWriter<W>,
 }
 
-pub struct SeqEncoder;
-pub struct TupleEncoder;
-pub struct TupleStructEncoder;
-pub struct TupleVariantEncoder;
-pub struct MapEncoder;
-pub struct StructEncoder;
-pub struct StructVariantEncoder;
+pub struct SeqEncoder<'a, W: Write> {
+    encoder: &'a mut Encoder<W>
+}
+
+pub struct TupleEncoder<'a, W: Write> {
+    encoder: &'a mut Encoder<W>
+}
+
+pub struct TupleStructEncoder<'a, W: Write> {
+    encoder: &'a mut Encoder<W>
+}
+
+pub struct TupleVariantEncoder<'a, W: Write> {
+    encoder: &'a mut Encoder<W>
+}
+
+pub struct MapEncoder<'a, W: Write> {
+    encoder: &'a mut Encoder<W>
+}
+
+pub struct StructEncoder<'a, W: Write> {
+    encoder: &'a mut Encoder<W>
+}
+
+pub struct StructVariantEncoder<'a, W: Write> {
+    encoder: &'a mut Encoder<W>
+}
 
 impl<W: Write> Encoder<W> {
     pub fn into_writer(destination: W) -> Self {
@@ -30,7 +50,7 @@ impl<W: Write> Serializer for &mut Encoder<W> {
     type Ok = ();
     type Error = EncodeError;
 
-    type SerializeSeq = SeqEncoder;
+    type SerializeSeq<'a> = SeqEncoder<'a>;
     type SerializeTuple = TupleEncoder;
     type SerializeTupleStruct = TupleStructEncoder;
     type SerializeTupleVariant = TupleVariantEncoder;
@@ -321,6 +341,21 @@ impl<W: Write> Serializer for &mut Encoder<W> {
         variant: &'static str,
         len: usize,
     ) -> Result<Self::SerializeStructVariant, Self::Error> {
+        todo!()
+    }
+}
+
+impl<W: Write> SerializeSeq for SeqEncoder<'_, W> {
+    type Ok = ();
+    type Error = EncodeError;
+
+    fn serialize_element<T>(&mut self, value: &T) -> Result<(), Self::Error>
+    where
+        T: ?Sized + Serialize {
+        todo!()
+    }
+
+    fn end(self) -> Result<Self::Ok, Self::Error> {
         todo!()
     }
 }
