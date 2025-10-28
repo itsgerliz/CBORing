@@ -1,10 +1,18 @@
 use crate::error::EncodeError;
-use serde::ser::{Impossible, Serialize, Serializer};
+use serde::ser::{Serialize, Serializer};
 use std::io::{BufWriter, Write};
 
 pub struct Encoder<W: Write> {
     writer: BufWriter<W>,
 }
+
+pub struct SeqEncoder;
+pub struct TupleEncoder;
+pub struct TupleStructEncoder;
+pub struct TupleVariantEncoder;
+pub struct MapEncoder;
+pub struct StructEncoder;
+pub struct StructVariantEncoder;
 
 impl<W: Write> Encoder<W> {
     pub fn into_writer(destination: W) -> Self {
@@ -22,13 +30,13 @@ impl<W: Write> Serializer for &mut Encoder<W> {
     type Ok = ();
     type Error = EncodeError;
 
-    type SerializeSeq = Impossible<Self::Ok, Self::Error>;
-    type SerializeTuple = Impossible<Self::Ok, Self::Error>;
-    type SerializeTupleStruct = Impossible<Self::Ok, Self::Error>;
-    type SerializeTupleVariant = Impossible<Self::Ok, Self::Error>;
-    type SerializeMap = Impossible<Self::Ok, Self::Error>;
-    type SerializeStruct = Impossible<Self::Ok, Self::Error>;
-    type SerializeStructVariant = Impossible<Self::Ok, Self::Error>;
+    type SerializeSeq = SeqEncoder;
+    type SerializeTuple = TupleEncoder;
+    type SerializeTupleStruct = TupleStructEncoder;
+    type SerializeTupleVariant = TupleVariantEncoder;
+    type SerializeMap = MapEncoder;
+    type SerializeStruct = StructEncoder;
+    type SerializeStructVariant = StructVariantEncoder;
 
     fn serialize_bool(self, v: bool) -> Result<Self::Ok, Self::Error> {
         let byte: u8 = if v { 0xF5 } else { 0xF4 };
@@ -131,11 +139,11 @@ impl<W: Write> Serializer for &mut Encoder<W> {
         }
     }
 
-    fn serialize_f32(self, v: f32) -> Result<Self::Ok, Self::Error> {
+    fn serialize_f32(self, _v: f32) -> Result<Self::Ok, Self::Error> {
         todo!()
     }
 
-    fn serialize_f64(self, v: f64) -> Result<Self::Ok, Self::Error> {
+    fn serialize_f64(self, _v: f64) -> Result<Self::Ok, Self::Error> {
         todo!()
     }
 
@@ -215,55 +223,57 @@ impl<W: Write> Serializer for &mut Encoder<W> {
     }
 
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        Ok(self.writer.write_all(&[0xF6])?)
     }
 
     fn serialize_some<T>(self, value: &T) -> Result<Self::Ok, Self::Error>
     where
         T: ?Sized + Serialize,
     {
-        todo!()
+        value.serialize(self)
     }
 
     fn serialize_unit(self) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        Ok(self.writer.write_all(&[0xF6])?)
     }
 
-    fn serialize_unit_struct(self, name: &'static str) -> Result<Self::Ok, Self::Error> {
-        todo!()
+    fn serialize_unit_struct(self, _name: &'static str) -> Result<Self::Ok, Self::Error> {
+        Ok(self.writer.write_all(&[0xF6])?)
     }
 
     fn serialize_unit_variant(
         self,
-        name: &'static str,
+        _name: &'static str,
         variant_index: u32,
-        variant: &'static str,
+        _variant: &'static str,
     ) -> Result<Self::Ok, Self::Error> {
-        todo!()
+        variant_index.serialize(self)
     }
 
     fn serialize_newtype_struct<T>(
         self,
-        name: &'static str,
+        _name: &'static str,
         value: &T,
     ) -> Result<Self::Ok, Self::Error>
     where
         T: ?Sized + Serialize,
     {
-        todo!()
+        value.serialize(self)
     }
 
     fn serialize_newtype_variant<T>(
         self,
-        name: &'static str,
+        _name: &'static str,
         variant_index: u32,
-        variant: &'static str,
+        _variant: &'static str,
         value: &T,
     ) -> Result<Self::Ok, Self::Error>
     where
         T: ?Sized + Serialize,
     {
-        todo!()
+        variant_index.serialize(&mut *self)?;
+        value.serialize(&mut *self)?;
+        Ok(())
     }
 
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
