@@ -1,3 +1,5 @@
+//! The CBOR encoder
+
 use crate::error::EncodeError;
 use serde::ser::{
     Serialize, SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant, SerializeTuple,
@@ -5,45 +7,65 @@ use serde::ser::{
 };
 use std::io::{BufWriter, Write};
 
+/// The encoder type, contains an inner writer where the encoded CBOR data will be written
+/// # Considerations
+/// - The inner writer is buffered
 pub struct Encoder<W: Write> {
     writer: BufWriter<W>,
 }
 
+/// The sequence encoder helper type, contains the main encoder type
 pub struct SeqEncoder<'a, W: Write> {
     encoder: &'a mut Encoder<W>,
 }
 
+/// The tuple encoder helper type, contains the main encoder type
 pub struct TupleEncoder<'a, W: Write> {
     encoder: &'a mut Encoder<W>,
 }
 
+/// The tuple struct encoder helper type, contains the main encoder type
 pub struct TupleStructEncoder<'a, W: Write> {
     encoder: &'a mut Encoder<W>,
 }
 
+/// The tuple variant encoder helper type, contains the main encoder type
 pub struct TupleVariantEncoder<'a, W: Write> {
     encoder: &'a mut Encoder<W>,
 }
 
+/// The map encoder helper type, contains the main encoder type
 pub struct MapEncoder<'a, W: Write> {
     encoder: &'a mut Encoder<W>,
 }
 
+/// The struct encoder helper type, contains the main encoder type
 pub struct StructEncoder<'a, W: Write> {
     encoder: &'a mut Encoder<W>,
 }
 
+/// The struct variant encoder helper type, contains the main encoder type
 pub struct StructVariantEncoder<'a, W: Write> {
     encoder: &'a mut Encoder<W>,
 }
 
 impl<W: Write> Encoder<W> {
+    /// Construct a new encoder, which will write its output into `W`
     pub fn into_writer(destination: W) -> Self {
         Self {
             writer: BufWriter::new(destination),
         }
     }
 
+    /// As you can see in the Considerations section on this type,
+    /// the [Encoder]'s inner writer is buffered, this means that while you
+    /// might have finished encoding data, this inner buffer could have CBOR data
+    /// pending to be written to its writer, this method tries to flush this buffer,
+    /// ensuring all pending data is written to its writer
+    /// # Considerations
+    /// When the [Encoder] is dropped, flush() will be called automatically by the
+    /// [std::ops::Drop] trait, but any errors that occur during this process
+    /// will be ignored, therefore, its highly recommendable to call this method
     pub fn flush(&mut self) -> Result<(), EncodeError> {
         Ok(self.writer.flush()?)
     }
